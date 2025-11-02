@@ -6,3 +6,5 @@ db.sqlite3
 database.db
 face_emotionModel.h5
 *.log
+
+SECRET_KEY = "16%9%l5sk*i0wbpp0o_2o138h8$bhuf&+lr&s^-02-sby&u4mv"
