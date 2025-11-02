@@ -2,8 +2,8 @@ services:
   - type: web
     name: face-detection
     env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn FACE_DETECTION.wsgi:application
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10
+    plan: free
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+    startCommand: gunicorn face_detection_project.wsgi
