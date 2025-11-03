@@ -39,7 +39,7 @@ import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), 'face_emotionModel.h5')
+MODEL_PATH = os.path.join(os.path.dirname(__file__), 'face_emotionModel_quant.tflite')
 
 # Don't load model immediately
 _model = None  
