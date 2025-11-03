@@ -13,8 +13,8 @@ echo "Installing dependencies..."
 pip install -r requirements.txt
 
 # Optional: run Django migrations (uncomment if needed)
-# echo "Applying Django migrations..."
-# python manage.py migrate
+echo "Applying Django migrations..."
+python manage.py migrate
 
 # Optional: collect static files if your project uses them
 # echo "Collecting static files..."
