@@ -1,1 +1,1 @@
-web: gunicorn face_detection_project.wsgi
+web: gunicorn face_detection_project.wsgi --timeout 120 --preload
