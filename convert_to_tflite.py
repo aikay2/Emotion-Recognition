@@ -1,34 +1,31 @@
 import tensorflow as tf
-import numpy as np
+from tensorflow.keras.models import model_from_json
+import h5py
 
 h5_model_path = "face_emotionModel.h5"
 tflite_model_path = "face_emotionModel_quant.tflite"
 
-# Load model
-model = tf.keras.models.load_model(h5_model_path)
+# --- STEP 1: Read model config manually ---
+with h5py.File(h5_model_path, 'r') as f:
+    model_config = f.attrs.get('model_config')
+    if model_config is None:
+        raise ValueError("No model config found inside .h5 file")
+    # If it's bytes, decode. If it's already a string, keep it.
+    if isinstance(model_config, bytes):
+        model_json = model_config.decode('utf-8')
+    else:
+        model_json = model_config
+    model = model_from_json(model_json)
 
-# Create converter
+# --- STEP 2: Load weights ---
+model.load_weights(h5_model_path)
+
+# --- STEP 3: Convert to TFLite ---
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
-
-# Enable optimizations
 converter.optimizations = [tf.lite.Optimize.DEFAULT]
-
-# (Optional but recommended) Provide a representative dataset for better accuracy
-def representative_data_gen():
-    for _ in range(100):
-        dummy_input = np.random.rand(1, 48, 48, 1).astype(np.float32)
-        yield [dummy_input]
-
-converter.representative_dataset = representative_data_gen
-
-# Force full integer quantization (saves more space)
-converter.target_spec.supported_types = [tf.float16]
-
-# Convert model
 tflite_model = converter.convert()
 
-# Save the new quantized model
 with open(tflite_model_path, "wb") as f:
     f.write(tflite_model)
 
-print("✅ Quantized TensorFlow Lite model saved as:", tflite_model_path)
+print("✅ Successfully converted to TFLite:", tflite_model_path)
