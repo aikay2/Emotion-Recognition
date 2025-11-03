@@ -36,29 +36,45 @@
 
 import os
 import numpy as np
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 
+# Locate the TensorFlow Lite model inside 'core' folder
 MODEL_PATH = os.path.join(os.path.dirname(__file__), 'face_emotionModel_quant.tflite')
 
-# Don't load model immediately
-_model = None  
+# Global interpreter (cached so it doesn't reload on every request)
+_interpreter = None
+_input_details = None
+_output_details = None
 
-def get_model():
-    global _model
-    if _model is None:
-        _model = load_model(MODEL_PATH)
-    return _model
+
+def get_interpreter():
+    global _interpreter, _input_details, _output_details
+    if _interpreter is None:
+        _interpreter = tf.lite.Interpreter(model_path=MODEL_PATH)
+        _interpreter.allocate_tensors()
+        _input_details = _interpreter.get_input_details()
+        _output_details = _interpreter.get_output_details()
+    return _interpreter, _input_details, _output_details
 
 
 def predict_emotion(img_path):
-    model = get_model()  # load only when first used
+    interpreter, input_details, output_details = get_interpreter()
+
+    # Preprocess image
     img = image.load_img(img_path, target_size=(48, 48), color_mode="grayscale")
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
-    img_array /= 255.0
+    img_array = img_array.astype(np.float32) / 255.0
 
-    prediction = model.predict(img_array)
+    # Set input tensor
+    interpreter.set_tensor(input_details[0]['index'], img_array)
+
+    # Run inference
+    interpreter.invoke()
+
+    # Get output tensor
+    prediction = interpreter.get_tensor(output_details[0]['index'])
     emotion_index = int(np.argmax(prediction))
     return ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise'][emotion_index]
 
