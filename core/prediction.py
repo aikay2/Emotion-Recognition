@@ -61,8 +61,14 @@ def get_interpreter():
 def predict_emotion(img_path):
     interpreter, input_details, output_details = get_interpreter()
 
-    # Preprocess image
-    img = image.load_img(img_path, target_size=(48, 48), color_mode="grayscale")
+    # Get model input shape dynamically (e.g., [1, 224, 224, 1] or [1, 224, 224, 3])
+    input_shape = input_details[0]['shape']
+    height, width = input_shape[1], input_shape[2]
+    channels = input_shape[3]
+
+    # Load and preprocess the image
+    color_mode = "grayscale" if channels == 1 else "rgb"
+    img = image.load_img(img_path, target_size=(height, width), color_mode=color_mode)
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0)
     img_array = img_array.astype(np.float32) / 255.0
@@ -73,7 +79,7 @@ def predict_emotion(img_path):
     # Run inference
     interpreter.invoke()
 
-    # Get output tensor
+    # Get prediction
     prediction = interpreter.get_tensor(output_details[0]['index'])
     emotion_index = int(np.argmax(prediction))
     return ['angry', 'disgust', 'fear', 'happy', 'neutral', 'sad', 'surprise'][emotion_index]
